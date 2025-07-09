@@ -15,11 +15,13 @@ def create_virtual_environment():
     
     if os.path.exists(venv_path):
         print(f"Virtual environment '{venv_path}' already exists.")
-        return venv_path
+        print("Removing existing virtual environment to recreate with system packages access...")
+        import shutil
+        shutil.rmtree(venv_path)
     
-    print(f"Creating virtual environment at '{venv_path}'...")
+    print(f"Creating virtual environment at '{venv_path}' with system packages access...")
     try:
-        venv.create(venv_path, with_pip=True)
+        venv.create(venv_path, with_pip=True, system_site_packages=True)
         print("✓ Virtual environment created successfully!")
         return venv_path
     except Exception as e:
