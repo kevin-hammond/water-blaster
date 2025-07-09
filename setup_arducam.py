@@ -7,6 +7,7 @@ This script helps configure the camera and install dependencies.
 import subprocess
 import sys
 import os
+import re
 
 def run_command(command, description):
     """Run a shell command and handle errors."""
@@ -32,11 +33,28 @@ def check_kernel_version():
         kernel_version = result.stdout.strip()
         print(f"Current kernel version: {kernel_version}")
         
-        # Extract version numbers
+        # Extract version numbers more robustly
+        # Handle formats like "6.1.34+rpt" or "6.1.34-rpi" 
         version_parts = kernel_version.split('.')
+        
+        if len(version_parts) < 3:
+            print("✗ Unexpected kernel version format")
+            return False
+        
         major = int(version_parts[0])
         minor = int(version_parts[1])
-        patch = int(version_parts[2].split('-')[0])
+        
+        # Extract patch version by removing non-numeric characters
+        patch_str = version_parts[2]
+        # Remove everything after +, -, or first non-digit character
+        patch_match = re.match(r'(\d+)', patch_str)
+        if patch_match:
+            patch = int(patch_match.group(1))
+        else:
+            # If we can't parse patch, assume it's 0
+            patch = 0
+        
+        print(f"Parsed version: {major}.{minor}.{patch}")
         
         # Check if version is 6.1.73 or later
         if major > 6 or (major == 6 and minor > 1) or (major == 6 and minor == 1 and patch >= 73):
