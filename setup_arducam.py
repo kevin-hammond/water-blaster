@@ -136,29 +136,53 @@ def configure_camera():
 
 def install_dependencies():
     """Install required Python packages."""
-    # Install system packages first
+    print("Installing dependencies...")
+    
+    # Install system packages first (recommended approach)
     system_packages = [
         'python3-picamera2',
         'python3-opencv',
         'python3-lgpio',
-        'python3-numpy'
+        'python3-numpy',
+        'python3-pip'
     ]
     
+    print("Installing system packages...")
     for package in system_packages:
         if not run_command(f"sudo apt install -y {package}", f"Installing {package}"):
             print(f"  Warning: Failed to install {package}")
     
-    # Then install pip packages if needed
-    pip_packages = [
-        'picamera2',
-        'opencv-python',
-        'lgpio',
-        'numpy'
-    ]
+    # Check if pip packages are needed (fallback)
+    pip_packages = {
+        'picamera2': 'picamera2',
+        'opencv-python': 'cv2',
+        'lgpio': 'lgpio',
+        'numpy': 'numpy'
+    }
     
-    for package in pip_packages:
-        if not run_command(f"pip3 install {package}", f"Installing {package}"):
-            print(f"  Warning: Failed to install {package}")
+    print("Checking if additional pip packages are needed...")
+    for package, import_name in pip_packages.items():
+        try:
+            __import__(import_name)
+            print(f"✓ {package} is available")
+        except ImportError:
+            print(f"ℹ {package} not found, attempting to install...")
+            
+            # Try different installation methods
+            install_methods = [
+                f"pip3 install {package}",
+                f"pip3 install --user {package}",
+                f"pip3 install --break-system-packages {package}"
+            ]
+            
+            installed = False
+            for method in install_methods:
+                if run_command(method, f"Installing {package} via pip"):
+                    installed = True
+                    break
+            
+            if not installed:
+                print(f"  Warning: Could not install {package}")
     
     return True
 

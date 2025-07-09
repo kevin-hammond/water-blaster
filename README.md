@@ -26,9 +26,33 @@ This project provides Python scripts to control the Arducam 64MP OV64A40 camera 
 
 ## Software Setup
 
-### 1. Run the Setup Script
+### 1. Handle "Externally Managed Environment" Error
 
-First, make the setup script executable and run it:
+If you encounter "externally managed environment" errors when installing Python packages, you have several options:
+
+**Option A: Use System Packages (Recommended)**
+
+```bash
+sudo apt update
+sudo apt install -y python3-picamera2 python3-opencv python3-lgpio python3-numpy
+```
+
+**Option B: Use Virtual Environment**
+
+```bash
+python3 setup_venv.py
+source activate_camera_env.sh
+```
+
+**Option C: Use --break-system-packages (Use with caution)**
+
+```bash
+pip3 install --break-system-packages numpy opencv-python lgpio picamera2
+```
+
+### 2. Run the Setup Script
+
+The automated setup script handles the above issues automatically:
 
 ```bash
 chmod +x setup_arducam.py
@@ -39,11 +63,11 @@ This script will:
 
 - Update your system
 - Check kernel compatibility (requires 6.1.73+)
-- Install required Python packages
+- Install required Python packages (trying multiple methods)
 - Configure the camera in `/boot/firmware/config.txt`
-- Start the lgd daemon for GPIO control
+- Handle lgd daemon setup
 
-### 2. Reboot Your Pi
+### 3. Reboot Your Pi
 
 After the setup script completes successfully, reboot your Raspberry Pi:
 
@@ -51,7 +75,7 @@ After the setup script completes successfully, reboot your Raspberry Pi:
 sudo reboot
 ```
 
-### 3. Test the Camera
+### 4. Test the Camera
 
 After rebooting, test if the camera is working:
 
@@ -174,6 +198,8 @@ picam2.configure(config)
 
 - `minimal_camera_servo.py` - Basic camera and servo control
 - `setup_arducam.py` - Automated setup script
+- `setup_venv.py` - Virtual environment setup script
+- `test_gpio.py` - GPIO functionality test script
 - `water_blaster_pi5.py` - Your existing water blaster system
 - `camera.md` - Arducam documentation
 
