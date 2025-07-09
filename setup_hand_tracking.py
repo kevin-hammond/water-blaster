@@ -44,10 +44,19 @@ def install_dependencies_in_venv(venv_path):
     
     try:
         # Upgrade pip first
+        print("Upgrading pip...")
         subprocess.check_call([python_path, "-m", "pip", "install", "--upgrade", "pip"])
         
-        # Install from requirements.txt
-        subprocess.check_call([python_path, "-m", "pip", "install", "-r", "requirements.txt"])
+        # Install numpy first to avoid compatibility issues
+        print("Installing numpy...")
+        subprocess.check_call([python_path, "-m", "pip", "install", "--force-reinstall", "numpy==1.24.3"])
+        
+        # Install other packages
+        print("Installing other dependencies...")
+        subprocess.check_call([python_path, "-m", "pip", "install", "--force-reinstall", "opencv-python==4.8.1.78"])
+        subprocess.check_call([python_path, "-m", "pip", "install", "--force-reinstall", "mediapipe==0.10.7"])
+        subprocess.check_call([python_path, "-m", "pip", "install", "--force-reinstall", "lgpio"])
+        
         print("✓ All dependencies installed successfully!")
         
     except subprocess.CalledProcessError as e:
