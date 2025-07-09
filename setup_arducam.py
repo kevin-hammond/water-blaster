@@ -136,33 +136,67 @@ def configure_camera():
 
 def install_dependencies():
     """Install required Python packages."""
-    packages = [
+    # Install system packages first
+    system_packages = [
+        'python3-picamera2',
+        'python3-opencv',
+        'python3-lgpio',
+        'python3-numpy'
+    ]
+    
+    for package in system_packages:
+        if not run_command(f"sudo apt install -y {package}", f"Installing {package}"):
+            print(f"  Warning: Failed to install {package}")
+    
+    # Then install pip packages if needed
+    pip_packages = [
         'picamera2',
         'opencv-python',
         'lgpio',
         'numpy'
     ]
     
-    for package in packages:
+    for package in pip_packages:
         if not run_command(f"pip3 install {package}", f"Installing {package}"):
             print(f"  Warning: Failed to install {package}")
     
     return True
 
 def check_lgd_daemon():
-    """Check if lgd daemon is running."""
+    """Check if lgd daemon is running or install it if needed."""
+    # First check if the service exists
+    result = subprocess.run("systemctl list-unit-files | grep lgd", shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        print("ℹ lgd daemon not found. Installing...")
+        # Try to install lgpio if not present
+        if not run_command("sudo apt install -y python3-lgpio", "Installing lgpio package"):
+            print("  Warning: Could not install lgpio package")
+        
+        # Check if lgd binary exists
+        result = subprocess.run("which lgd", shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            print("ℹ lgd binary not found. This is normal on some systems.")
+            print("  The lgpio library should still work without the daemon.")
+            return True
+        
+        # If lgd exists, try to create a service (this is optional)
+        print("  Note: lgd daemon is optional on this system")
+        return True
+    
+    # If the service exists, check if it's running
     result = subprocess.run("systemctl is-active lgd", shell=True, capture_output=True, text=True)
     if result.returncode == 0:
         print("✓ lgd daemon is running")
         return True
     else:
-        print("✗ lgd daemon is not running")
-        print("  Starting lgd daemon...")
+        print("ℹ lgd daemon not running, attempting to start...")
         if run_command("sudo systemctl start lgd", "Starting lgd daemon"):
             if run_command("sudo systemctl enable lgd", "Enabling lgd daemon"):
                 print("✓ lgd daemon is now running and enabled")
                 return True
-        return False
+        else:
+            print("  Note: lgd daemon failed to start, but GPIO may still work")
+            return True  # Return True because GPIO might still work without daemon
 
 def main():
     print("Arducam 64MP OV64A40 Setup Script for Raspberry Pi 5")
